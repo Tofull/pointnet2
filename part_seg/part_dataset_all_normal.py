@@ -8,6 +8,7 @@ import json
 import numpy as np
 import sys
 
+
 def pc_normalize(pc):
     l = pc.shape[0]
     centroid = np.mean(pc, axis=0)
@@ -16,8 +17,9 @@ def pc_normalize(pc):
     pc = pc / m
     return pc
 
+
 class PartNormalDataset():
-    def __init__(self, root, npoints = 2500, classification = False, split='train', normalize=True, return_cls_label = False):
+    def __init__(self, root, npoints=2500, classification=False, split='train', normalize=True, return_cls_label=False):
         self.npoints = npoints
         self.root = root
         self.catfile = os.path.join(self.root, 'synsetoffset2category.txt')
@@ -31,8 +33,8 @@ class PartNormalDataset():
             for line in f:
                 ls = line.strip().split()
                 self.cat[ls[0]] = ls[1]
-        self.cat = {k:v for k,v in self.cat.items()}
-        #print(self.cat)
+        self.cat = {key: value for key, value in self.cat.items()}
+        # print(self.cat)
 
         self.meta = {}
         with open(os.path.join(self.root, 'train_test_split', 'shuffled_train_file_list.json'), 'r') as f:
@@ -42,24 +44,24 @@ class PartNormalDataset():
         with open(os.path.join(self.root, 'train_test_split', 'shuffled_test_file_list.json'), 'r') as f:
             test_ids = set([str(d.split('/')[2]) for d in json.load(f)])
         for item in self.cat:
-            #print('category', item)
+            # print('category', item)
             self.meta[item] = []
             dir_point = os.path.join(self.root, self.cat[item])
             fns = sorted(os.listdir(dir_point))
-            #print(fns[0][0:-4])
-            if split=='trainval':
+            # print(fns[0][0:-4])
+            if split == 'trainval':
                 fns = [fn for fn in fns if ((fn[0:-4] in train_ids) or (fn[0:-4] in val_ids))]
-            elif split=='train':
+            elif split == 'train':
                 fns = [fn for fn in fns if fn[0:-4] in train_ids]
-            elif split=='val':
+            elif split == 'val':
                 fns = [fn for fn in fns if fn[0:-4] in val_ids]
-            elif split=='test':
+            elif split == 'test':
                 fns = [fn for fn in fns if fn[0:-4] in test_ids]
             else:
-                print('Unknown split: %s. Exiting..'%(split))
+                print('Unknown split: %s. Exiting..' % (split))
                 exit(-1)
 
-            #print(os.path.basename(fns))
+            # print(os.path.basename(fns))
             for fn in fns:
                 token = (os.path.splitext(os.path.basename(fn))[0])
                 self.meta[item].append(os.path.join(dir_point, token + '.txt'))
@@ -76,7 +78,7 @@ class PartNormalDataset():
         for cat in sorted(self.seg_classes.keys()):
             print(cat, self.seg_classes[cat])
 
-        self.cache = {} # from index to (point_set, cls, seg) tuple
+        self.cache = {}  # from index to (point_set, cls, seg) tuple
         self.cache_size = 20000
 
     def __getitem__(self, index):
@@ -88,19 +90,19 @@ class PartNormalDataset():
             cls = self.classes[cat]
             cls = np.array([cls]).astype(np.int32)
             data = np.loadtxt(fn[1]).astype(np.float32)
-            point_set = data[:,0:3]
+            point_set = data[:, 0:3]
             if self.normalize:
                 point_set = pc_normalize(point_set)
-            normal = data[:,3:6]
-            seg = data[:,-1].astype(np.int32)
+            normal = data[:, 3:6]
+            seg = data[:, -1].astype(np.int32)
             if len(self.cache) < self.cache_size:
                 self.cache[index] = (point_set, normal, seg, cls)
 
         choice = np.random.choice(len(seg), self.npoints, replace=True)
-        #resample
+        # resample
         point_set = point_set[choice, :]
         seg = seg[choice]
-        normal = normal[choice,:]
+        normal = normal[choice, :]
         if self.classification:
             return point_set, normal, cls
         else:
@@ -114,7 +116,7 @@ class PartNormalDataset():
 
 
 if __name__ == '__main__':
-    d = PartNormalDataset(root = '../data/shapenetcore_partanno_segmentation_benchmark_v0_normal', split='trainval', npoints=3000)
+    d = PartNormalDataset(root='../data/shapenetcore_partanno_segmentation_benchmark_v0_normal', split='trainval', npoints=3000)
     print(len(d))
 
     i = 500
@@ -127,10 +129,9 @@ if __name__ == '__main__':
 
     sys.path.append('../utils')
     import show3d_balls
-    show3d_balls.showpoints(ps, normal+1, ballradius=8)
+    show3d_balls.showpoints(ps, normal + 1, ballradius=8)
 
-    d = PartNormalDataset(root = '../data/shapenetcore_partanno_segmentation_benchmark_v0_normal', classification = True)
+    d = PartNormalDataset(root='../data/shapenetcore_partanno_segmentation_benchmark_v0_normal', classification=True)
     print(len(d))
     ps, normal, cls = d[0]
-    print(ps.shape, type(ps), cls.shape,type(cls))
-
+    print(ps.shape, type(ps), cls.shape, type(cls))
