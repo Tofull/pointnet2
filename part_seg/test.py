@@ -15,7 +15,7 @@ sys.path.append(os.path.join(ROOT_DIR, 'utils'))
 import provider
 import show3d_balls
 sys.path.append(os.path.join(ROOT_DIR, 'data_prep'))
-import part_dataset
+import part_dataset_all_normal
 
 
 parser = argparse.ArgumentParser()
@@ -31,9 +31,9 @@ MODEL_PATH = FLAGS.model_path
 GPU_INDEX = FLAGS.gpu
 NUM_POINT = FLAGS.num_point
 MODEL = importlib.import_module(FLAGS.model) # import network module
-NUM_CLASSES = 4
+NUM_CLASSES = 50
 DATA_PATH = os.path.join(ROOT_DIR, 'data', 'shapenetcore_partanno_segmentation_benchmark_v0_normal')
-TEST_DATASET = part_dataset.PartDataset(root=DATA_PATH, npoints=NUM_POINT, classification=False, class_choice=FLAGS.category, split='test')
+TEST_DATASET = part_dataset_all_normal.PartNormalDataset(root=DATA_PATH, npoints=NUM_POINT, classification=False, split='test')
 
 def get_model(batch_size, num_point):
     with tf.Graph().as_default():
@@ -63,7 +63,10 @@ def inference(sess, ops, pc, batch_size):
     num_batches = pc.shape[0]/batch_size
     logits = np.zeros((pc.shape[0], pc.shape[1], NUM_CLASSES))
     for i in range(num_batches):
-        feed_dict = {ops['pointclouds_pl']: pc[i*batch_size:(i+1)*batch_size,...],
+        data = pc[i * batch_size:(i + 1) * batch_size, ...]
+        batch_data = np.zeros((data.shape[0], data.shape[1], 6))
+        batch_data[:, :, 0:3] = data
+        feed_dict = {ops['pointclouds_pl']: batch_data,
                      ops['is_training_pl']: False}
         batch_logits = sess.run(ops['pred'], feed_dict=feed_dict)
         logits[i*batch_size:(i+1)*batch_size,...] = batch_logits
@@ -76,7 +79,7 @@ if __name__=='__main__':
     cmap = np.array([cmap(i) for i in range(10)])[:,:3]
 
     for i in range(len(TEST_DATASET)):
-        ps, seg = TEST_DATASET[i]
+        ps, _, seg = TEST_DATASET[i]
         sess, ops = get_model(batch_size=1, num_point=ps.shape[0])
         segp = inference(sess, ops, np.expand_dims(ps,0), batch_size=1) 
         segp = segp.squeeze()
