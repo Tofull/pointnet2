@@ -14,7 +14,7 @@ sys.path.append(BASE_DIR)
 sys.path.append(os.path.join(ROOT_DIR, 'models'))
 sys.path.append(os.path.join(ROOT_DIR, 'utils'))
 import provider
-import tf_util
+# import tf_util
 import part_dataset_all_normal
 
 parser = argparse.ArgumentParser()
@@ -54,14 +54,14 @@ DECAY_STEP = FLAGS.decay_step
 DECAY_RATE = FLAGS.decay_rate
 
 MODEL = importlib.import_module(FLAGS.model)  # import network module
-MODEL_FILE = os.path.join(ROOT_DIR, 'models', FLAGS.model+'.py')
+MODEL_FILE = os.path.join(ROOT_DIR, 'models', FLAGS.model + '.py')
 LOG_DIR = FLAGS.log_dir
 if not os.path.exists(LOG_DIR):
     os.mkdir(LOG_DIR)
 os.system('cp %s %s' % (MODEL_FILE, LOG_DIR))  # bkp of model def
 os.system('cp train.py %s' % (LOG_DIR))  # bkp of train procedure
 LOG_FOUT = open(os.path.join(LOG_DIR, 'log_train.txt'), 'w')
-LOG_FOUT.write(str(FLAGS)+'\n')
+LOG_FOUT.write(str(FLAGS) + '\n')
 
 BN_INIT_DECAY = 0.5
 BN_DECAY_DECAY_RATE = 0.5
@@ -82,7 +82,7 @@ TEST_DATASET = part_dataset_all_normal.PartNormalDataset(
 
 
 def log_string(out_str):
-    LOG_FOUT.write(out_str+'\n')
+    LOG_FOUT.write(out_str + '\n')
     LOG_FOUT.flush()
     print(out_str)
 
@@ -102,7 +102,7 @@ def get_learning_rate(batch):
 def get_bn_decay(batch):
     bn_momentum = tf.train.exponential_decay(
         BN_INIT_DECAY,
-        batch*BATCH_SIZE,
+        batch * BATCH_SIZE,
         BN_DECAY_DECAY_STEP,
         BN_DECAY_DECAY_RATE,
         staircase=True)
@@ -112,7 +112,7 @@ def get_bn_decay(batch):
 
 def train():
     with tf.Graph().as_default():
-        with tf.device('/gpu:'+str(GPU_INDEX)):
+        with tf.device('/gpu:' + str(GPU_INDEX)):
             pointclouds_pl, labels_pl = MODEL.placeholder_inputs(
                 BATCH_SIZE, NUM_POINT)
             is_training_pl = tf.placeholder(tf.bool, shape=())
@@ -132,7 +132,7 @@ def train():
 
             correct = tf.equal(tf.argmax(pred, 2), tf.to_int64(labels_pl))
             accuracy = tf.reduce_sum(
-                tf.cast(correct, tf.float32)) / float(BATCH_SIZE*NUM_POINT)
+                tf.cast(correct, tf.float32)) / float(BATCH_SIZE * NUM_POINT)
             tf.summary.scalar('accuracy', accuracy)
 
             print("--- Get training operator")
@@ -193,11 +193,11 @@ def train():
 
 
 def get_batch(dataset, idxs, start_idx, end_idx):
-    bsize = end_idx-start_idx
+    bsize = end_idx - start_idx
     batch_data = np.zeros((bsize, NUM_POINT, 6))
     batch_label = np.zeros((bsize, NUM_POINT), dtype=np.int32)
     for i in range(bsize):
-        ps, normal, seg = dataset[idxs[i+start_idx]]
+        ps, normal, seg = dataset[idxs[i + start_idx]]
         batch_data[i, :, 0:3] = ps
         batch_data[i, :, 3:6] = normal
         batch_label[i, :] = seg
@@ -211,7 +211,7 @@ def train_one_epoch(sess, ops, train_writer):
     # Shuffle train samples
     train_idxs = np.arange(0, len(TRAIN_DATASET))
     np.random.shuffle(train_idxs)
-    num_batches = len(TRAIN_DATASET)/BATCH_SIZE
+    num_batches = len(TRAIN_DATASET) / BATCH_SIZE
 
     log_string(str(datetime.now()))
 
@@ -220,12 +220,12 @@ def train_one_epoch(sess, ops, train_writer):
     loss_sum = 0
     for batch_idx in range(num_batches):
         start_idx = batch_idx * BATCH_SIZE
-        end_idx = (batch_idx+1) * BATCH_SIZE
+        end_idx = (batch_idx + 1) * BATCH_SIZE
         batch_data, batch_label = get_batch(
             TRAIN_DATASET, train_idxs, start_idx, end_idx)
         # Augment batched point clouds by rotation and jittering
-        #aug_data = batch_data
-        #aug_data = provider.random_scale_point_cloud(batch_data)
+        # aug_data = batch_data
+        # aug_data = provider.random_scale_point_cloud(batch_data)
         batch_data[:, :, 0:3] = provider.jitter_point_cloud(
             batch_data[:, :, 0:3])
         feed_dict = {ops['pointclouds_pl']: batch_data,
@@ -237,11 +237,11 @@ def train_one_epoch(sess, ops, train_writer):
         pred_val = np.argmax(pred_val, 2)
         correct = np.sum(pred_val == batch_label)
         total_correct += correct
-        total_seen += (BATCH_SIZE*NUM_POINT)
+        total_seen += (BATCH_SIZE * NUM_POINT)
         loss_sum += loss_val
 
-        if (batch_idx+1) % 10 == 0:
-            log_string(' -- %03d / %03d --' % (batch_idx+1, num_batches))
+        if (batch_idx + 1) % 10 == 0:
+            log_string(' -- %03d / %03d --' % (batch_idx + 1, num_batches))
             log_string('mean loss: %f' % (loss_sum / 10))
             log_string('accuracy: %f' % (total_correct / float(total_seen)))
             total_correct = 0
@@ -255,7 +255,7 @@ def eval_one_epoch(sess, ops, test_writer):
     is_training = False
     test_idxs = np.arange(0, len(TEST_DATASET))
     # Test on all data: last batch might be smaller than BATCH_SIZE
-    num_batches = (len(TEST_DATASET)+BATCH_SIZE-1)/BATCH_SIZE
+    num_batches = (len(TEST_DATASET) + BATCH_SIZE - 1) / BATCH_SIZE
 
     total_correct = 0
     total_seen = 0
@@ -279,8 +279,8 @@ def eval_one_epoch(sess, ops, test_writer):
         if batch_idx % 20 == 0:
             log_string('%03d/%03d' % (batch_idx, num_batches))
         start_idx = batch_idx * BATCH_SIZE
-        end_idx = min(len(TEST_DATASET), (batch_idx+1) * BATCH_SIZE)
-        cur_batch_size = end_idx-start_idx
+        end_idx = min(len(TEST_DATASET), (batch_idx + 1) * BATCH_SIZE)
+        cur_batch_size = end_idx - start_idx
         cur_batch_data, cur_batch_label = get_batch(
             TEST_DATASET, test_idxs, start_idx, end_idx)
         if cur_batch_size == BATCH_SIZE:
@@ -311,7 +311,7 @@ def eval_one_epoch(sess, ops, test_writer):
                 logits[:, seg_classes[cat]], 1) + seg_classes[cat][0]
         correct = np.sum(cur_pred_val == cur_batch_label)
         total_correct += correct
-        total_seen += (cur_batch_size*NUM_POINT)
+        total_seen += (cur_batch_size * NUM_POINT)
         if cur_batch_size == BATCH_SIZE:
             loss_sum += loss_val
         for l in range(NUM_CLASSES):
@@ -327,9 +327,9 @@ def eval_one_epoch(sess, ops, test_writer):
             for l in seg_classes[cat]:
                 # part is not present, no prediction as well
                 if (np.sum(segl == l) == 0) and (np.sum(segp == l) == 0):
-                    part_ious[l-seg_classes[cat][0]] = 1.0
+                    part_ious[l - seg_classes[cat][0]] = 1.0
                 else:
-                    part_ious[l-seg_classes[cat][0]] = np.sum((segl == l) & (
+                    part_ious[l - seg_classes[cat][0]] = np.sum((segl == l) & (
                         segp == l)) / float(np.sum((segl == l) | (segp == l)))
             shape_ious[cat].append(np.mean(part_ious))
 
@@ -340,7 +340,7 @@ def eval_one_epoch(sess, ops, test_writer):
         shape_ious[cat] = np.mean(shape_ious[cat])
     mean_shape_ious = np.mean(shape_ious.values())
     log_string('eval mean loss: %f' %
-               (loss_sum / float(len(TEST_DATASET)/BATCH_SIZE)))
+               (loss_sum / float(len(TEST_DATASET) / BATCH_SIZE)))
     log_string('eval accuracy: %f' % (total_correct / float(total_seen)))
     log_string('eval avg class acc: %f' % (np.mean(
         np.array(total_correct_class)/np.array(total_seen_class, dtype=np.float))))
@@ -350,7 +350,7 @@ def eval_one_epoch(sess, ops, test_writer):
     log_string('eval mean mIoU (all shapes): %f' % (np.mean(all_shape_ious)))
 
     EPOCH_CNT += 1
-    return total_correct/float(total_seen)
+    return total_correct / float(total_seen)
 
 
 if __name__ == "__main__":
