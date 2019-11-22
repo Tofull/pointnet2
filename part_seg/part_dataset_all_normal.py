@@ -19,33 +19,37 @@ def pc_normalize(pc):
 
 class PartNormalDataset():
     def __init__(self, root, npoints=2500, classification=False, split='train', normalize=True, return_cls_label=False):
+        # store parameters as instance variables
         self.npoints = npoints
         self.root = root
-        self.catfile = os.path.join(self.root, 'synsetoffset2category.txt')
-        self.cat = {}
-
         self.classification = classification
         self.normalize = normalize
         self.return_cls_label = return_cls_label
 
+        # Get available categories
+        self.catfile = os.path.join(self.root, 'synsetoffset2category.txt')
+        self.cat = {}
+
         with open(self.catfile, 'r') as f:
             for line in f:
-                ls = line.strip().split()
-                self.cat[ls[0]] = ls[1]
-        self.cat = {key: value for key, value in self.cat.items()}
-        # print(self.cat)
+                category, folder_name = line.strip().split()
+                self.cat[category] = folder_name
 
-        self.meta = {}
+
+        # Get files by stem name
         with open(os.path.join(self.root, 'train_test_split', 'shuffled_train_file_list.json'), 'r') as f:
             train_ids = set([str(d.split('/')[2]) for d in json.load(f)])
         with open(os.path.join(self.root, 'train_test_split', 'shuffled_val_file_list.json'), 'r') as f:
             val_ids = set([str(d.split('/')[2]) for d in json.load(f)])
         with open(os.path.join(self.root, 'train_test_split', 'shuffled_test_file_list.json'), 'r') as f:
             test_ids = set([str(d.split('/')[2]) for d in json.load(f)])
-        for item in self.cat:
+
+        # Build list of files by category
+        self.meta = {}
+        for category in self.cat:
             # print('category', item)
-            self.meta[item] = []
-            dir_point = os.path.join(self.root, self.cat[item])
+            self.meta[category] = []
+            dir_point = os.path.join(self.root, self.cat[category])
             fns = sorted(os.listdir(dir_point))
             # print(fns[0][0:-4])
             if split == 'trainval':
@@ -63,12 +67,12 @@ class PartNormalDataset():
             # print(os.path.basename(fns))
             for fn in fns:
                 token = (os.path.splitext(os.path.basename(fn))[0])
-                self.meta[item].append(os.path.join(dir_point, token + '.txt'))
+                self.meta[category].append(os.path.join(dir_point, token + '.txt'))
 
         self.datapath = []
-        for item in self.cat:
-            for fn in self.meta[item]:
-                self.datapath.append((item, fn))
+        for category in self.cat:
+            for fn in self.meta[category]:
+                self.datapath.append((category, fn))
 
         self.classes = dict(zip(self.cat, range(len(self.cat))))
         # Mapping from category ('Chair') to a list of int [10,11,12,13] as segmentation labels
