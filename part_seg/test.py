@@ -79,11 +79,16 @@ if __name__=='__main__':
     cmap = np.array([cmap(i) for i in range(10)])[:,:3]
 
     for i in range(len(TEST_DATASET)):
+        _, file_pointcloud = TEST_DATASET.datapath[i]
+        filename = os.path.basename(file_pointcloud)
+
         ps, _, seg = TEST_DATASET[i]
         sess, ops = get_model(batch_size=1, num_point=ps.shape[0])
         segp = inference(sess, ops, np.expand_dims(ps,0), batch_size=1) 
-        segp = segp.squeeze()
-
         gt = cmap[seg, :]
         pred = cmap[segp, :]
+
+        result = np.concatenate((ps, segp.T), axis=1)
+        np.savetxt('infer/' + filename, result, delimiter=',', fmt='%f')
+
         show3d_balls.showpoints(ps, gt, pred, ballradius=8)
