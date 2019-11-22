@@ -41,7 +41,7 @@ def get_model(batch_size, num_point):
             pointclouds_pl, labels_pl = MODEL.placeholder_inputs(batch_size, num_point)
             is_training_pl = tf.placeholder(tf.bool, shape=())
             pred, end_points = MODEL.get_model(pointclouds_pl, is_training_pl)
-            loss = MODEL.get_loss(pred, labels_pl, end_points)
+            loss = MODEL.get_loss(pred, labels_pl)
             saver = tf.train.Saver()
         # Create a session
         config = tf.ConfigProto()
