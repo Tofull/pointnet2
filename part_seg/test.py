@@ -60,7 +60,7 @@ def get_model(batch_size, num_point):
 def inference(sess, ops, pc, batch_size):
     ''' pc: BxNx3 array, return BxN pred '''
     assert pc.shape[0]%batch_size == 0
-    num_batches = pc.shape[0]/batch_size
+    num_batches = pc.shape[0]//batch_size
     logits = np.zeros((pc.shape[0], pc.shape[1], NUM_CLASSES))
     for i in range(num_batches):
         data = pc[i * batch_size:(i + 1) * batch_size, ...]

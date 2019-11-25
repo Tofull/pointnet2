@@ -60,9 +60,9 @@ def evaluate():
         with tf.device('/gpu:'+str(GPU_INDEX)):
             pointclouds_pl, labels_pl = MODEL.placeholder_inputs(BATCH_SIZE, NUM_POINT)
             is_training_pl = tf.placeholder(tf.bool, shape=())
-            print is_training_pl
+            print(is_training_pl)
             
-            print "--- Get model and loss"
+            print("--- Get model and loss")
             pred, end_points = MODEL.get_model(pointclouds_pl, is_training_pl)
             loss = MODEL.get_loss(pred, labels_pl)
             saver = tf.train.Saver()
@@ -98,7 +98,7 @@ def eval_one_epoch(sess, ops):
     is_training = False
     test_idxs = np.arange(0, len(TEST_DATASET))
     # Test on all data: last batch might be smaller than BATCH_SIZE
-    num_batches = (len(TEST_DATASET)+BATCH_SIZE-1)/BATCH_SIZE
+    num_batches = (len(TEST_DATASET)+BATCH_SIZE-1)//BATCH_SIZE
 
     total_correct = 0
     total_seen = 0
@@ -180,8 +180,8 @@ def eval_one_epoch(sess, ops):
         for iou in shape_ious[cat]:
             all_shape_ious.append(iou)
         shape_ious[cat] = np.mean(shape_ious[cat])
-    print len(all_shape_ious)
-    mean_shape_ious = np.mean(shape_ious.values())
+    print(len(all_shape_ious))
+    mean_shape_ious = np.mean(list(shape_ious.values()))
     log_string('eval mean loss: %f' % (loss_sum / float(len(TEST_DATASET)/BATCH_SIZE)))
     log_string('eval accuracy: %f'% (total_correct / float(total_seen)))
     log_string('eval avg class acc: %f' % (np.mean(np.array(total_correct_class)/np.array(total_seen_class,dtype=np.float))))

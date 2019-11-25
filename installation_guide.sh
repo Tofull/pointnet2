@@ -40,7 +40,7 @@ sudo apt-get install -y --no-install-recommends \
 
 
 
-
+################################################################## PYTHON 2 ##################################################################################
 ########################
 ##  tensorflow setup  ##
 ########################
@@ -129,6 +129,96 @@ cd ..
 # Infer
 cd part_seg
 python test.py --model pointnet2_part_seg --gpu 0
+cd ..
+
+
+################################################################## PYTHON 3 ##################################################################################
+########################
+##  tensorflow setup  ##
+########################
+
+# Install python
+sudo apt-get update
+sudo apt-get install -y python3-dev python3-pip
+
+# Install tensorflow
+pip3 install tensorflow-gpu==1.14
+
+# Test tensorflow
+python3 -c "import tensorflow as tf;print(tf.reduce_sum(tf.random.normal([1000, 1000])))"
+
+
+
+
+
+########################
+##  pointnet++ setup  ##
+########################
+
+# Install Pointnet++
+
+# Install pointnet++ dependency
+sudo apt-get update
+sudo apt-get install -y \
+    git \
+    g++-4.8
+
+git clone https://github.com/Tofull/pointnet2
+cd pointnet2
+
+# Compile Tensorflow operator
+# retrieve path to tensorflow library for compilation
+TF_INC=$(python3 -c 'import tensorflow as tf; print(tf.sysconfig.get_include())')
+TF_LIB=$(python3 -c 'import tensorflow as tf; print(tf.sysconfig.get_lib())')
+TF_LINK=$(python3 -c 'import tensorflow as tf; print(tf.sysconfig.get_link_flags()[0])')
+TF_FRAMEWORK=$(python3 -c 'import tensorflow as tf; print(tf.sysconfig.get_link_flags()[1])')
+
+
+# Compile sampling tensorflow operator
+cd ./tf_ops/sampling
+/usr/local/cuda-10.0/bin/nvcc tf_sampling_g.cu -o tf_sampling_g.cu.o -c -O2 -DGOOGLE_CUDA=1 -x cu -Xcompiler -fPIC
+g++-4.8 -std=c++11 tf_sampling.cpp tf_sampling_g.cu.o -o tf_sampling_so.so -shared -fPIC -I /usr/local/cuda-10.0/include -I$TF_INC -I$TF_INC/external/nsync/public -L$TF_LIB -lcudart -L /usr/local/cuda-10.0/lib64/ ${TF_LINK} ${TF_FRAMEWORK} -O2 -D_GLIBCXX_USE_CXX11_ABI=0
+cd ../..
+
+
+# Compile grouping tensorflow operator
+cd ./tf_ops/grouping
+/usr/local/cuda-10.0/bin/nvcc tf_grouping_g.cu -o tf_grouping_g.cu.o -c -O2 -DGOOGLE_CUDA=1 -x cu -Xcompiler -fPIC
+g++-4.8 -std=c++11 tf_grouping.cpp tf_grouping_g.cu.o -o tf_grouping_so.so -shared -fPIC -I /usr/local/cuda-10.0/include -I$TF_INC -I$TF_INC/external/nsync/public -L$TF_LIB -lcudart -L /usr/local/cuda-10.0/lib64/ ${TF_LINK} ${TF_FRAMEWORK} -O2 -D_GLIBCXX_USE_CXX11_ABI=0
+cd ../..
+
+
+# Compile 3d interpolate function
+cd ./tf_ops/3d_interpolation
+g++-4.8 -std=c++11 tf_interpolate.cpp -o tf_interpolate_so.so -shared -fPIC -I /usr/local/cuda-10.0/include -I$TF_INC -I$TF_INC/external/nsync/public -L$TF_LIB -lcudart -L /usr/local/cuda-10.0/lib64/ ${TF_LINK} ${TF_FRAMEWORK} -O2 -D_GLIBCXX_USE_CXX11_ABI=0
+cd ../..
+
+
+
+
+
+
+########################
+##  pointnet++ usage  ##
+########################
+
+# Use pointnet++
+
+# Train
+cd part_seg
+python3 train.py --model pointnet2_part_seg --log_dir log --gpu 0 --max_epoch 201
+cd ..
+
+
+# Evaluate
+cd part_seg
+python3 evaluate.py --model pointnet2_part_seg --gpu 0
+cd ..
+
+
+# Infer
+cd part_seg
+python3 test.py --model pointnet2_part_seg --gpu 0
 cd ..
 
 

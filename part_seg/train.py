@@ -211,7 +211,7 @@ def train_one_epoch(sess, ops, train_writer):
     # Shuffle train samples
     train_idxs = np.arange(0, len(TRAIN_DATASET))
     np.random.shuffle(train_idxs)
-    num_batches = len(TRAIN_DATASET) / BATCH_SIZE
+    num_batches = len(TRAIN_DATASET) // BATCH_SIZE
 
     log_string(str(datetime.now()))
 
@@ -255,7 +255,7 @@ def eval_one_epoch(sess, ops, test_writer):
     is_training = False
     test_idxs = np.arange(0, len(TEST_DATASET))
     # Test on all data: last batch might be smaller than BATCH_SIZE
-    num_batches = (len(TEST_DATASET) + BATCH_SIZE - 1) / BATCH_SIZE
+    num_batches = (len(TEST_DATASET) + BATCH_SIZE - 1) // BATCH_SIZE
 
     total_correct = 0
     total_seen = 0
@@ -338,7 +338,7 @@ def eval_one_epoch(sess, ops, test_writer):
         for iou in shape_ious[cat]:
             all_shape_ious.append(iou)
         shape_ious[cat] = np.mean(shape_ious[cat])
-    mean_shape_ious = np.mean(shape_ious.values())
+    mean_shape_ious = np.mean(list(shape_ious.values()))
     log_string('eval mean loss: %f' %
                (loss_sum / float(len(TEST_DATASET) / BATCH_SIZE)))
     log_string('eval accuracy: %f' % (total_correct / float(total_seen)))
