@@ -73,6 +73,7 @@ sudo apt-get install -y \
 
 git clone https://github.com/Tofull/pointnet2
 cd pointnet2
+pip install -r requirements.txt
 
 
 
@@ -165,6 +166,8 @@ sudo apt-get install -y \
 
 git clone https://github.com/Tofull/pointnet2
 cd pointnet2
+pip3 install -r requirements.txt
+
 
 # Compile Tensorflow operator
 # retrieve path to tensorflow library for compilation
