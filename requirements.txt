@@ -3,4 +3,4 @@ opencv-python
 matplotlib
 scipy
 h5py
-tensorflow==1.14
+tensorflow-gpu==1.14
