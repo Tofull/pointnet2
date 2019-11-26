@@ -1,3 +1,17 @@
+
+> *Disclaimer:*
+> This fork is used by Jakarto team to test Pointnet++ on Jakarto datasets.
+> Jakarto is a 3d mapping company. Pointnet++ helps to automate the detection of some urban assets like manholes, benches, fire hydrants, trees... directly from lidar 3d point clouds.
+>
+> This fork adds : 
+> - python3 compatibility for at least `part_seg`. 
+> - It fixes some issues related to the object part segmentation.
+> - Some instructions to set up a pointnet++ environnement are provided on [the installation guide](installation_guide.sh).
+> This has been tested on an instance of Cloud Cloud Compute Engine n1-standard-2 (2 vCPU, 7,5 Go of RAM, Ubuntu 18.04, 40 Go hdd) with GPU access (1 x NVIDIA Tesla P4).
+> - Some data has been added to facilitate development. This does not replace the need to download real datasets.
+
+
+
 ### PointNet++: *Deep Hierarchical Feature Learning on Point Sets in a Metric Space*
 Created by <a href="http://charlesrqi.com" target="_blank">Charles R. Qi</a>, <a href="http://stanford.edu/~ericyi">Li (Eric) Yi</a>, <a href="http://ai.stanford.edu/~haosu/" target="_blank">Hao Su</a>, <a href="http://geometry.stanford.edu/member/guibas/" target="_blank">Leonidas J. Guibas</a> from Stanford University.
 
