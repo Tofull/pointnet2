@@ -4,3 +4,5 @@ matplotlib
 scipy
 h5py
 tensorflow-gpu==1.14
+pathlib; python_version < '3.0'
+laspy
