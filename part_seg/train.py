@@ -39,6 +39,7 @@ parser.add_argument('--decay_step', type=int, default=200000,
                     help='Decay step for lr decay [default: 200000]')
 parser.add_argument('--decay_rate', type=float, default=0.7,
                     help='Decay rate for lr decay [default: 0.7]')
+parser.add_argument('--jakarto', action='store_true', help='If set, use jakarto dataset instead of shapenet')
 FLAGS = parser.parse_args()
 
 EPOCH_CNT = 0
@@ -52,6 +53,7 @@ MOMENTUM = FLAGS.momentum
 OPTIMIZER = FLAGS.optimizer
 DECAY_STEP = FLAGS.decay_step
 DECAY_RATE = FLAGS.decay_rate
+USE_JAKARTO_DATASET = FLAGS.jakarto
 
 MODEL = importlib.import_module(FLAGS.model)  # import network module
 MODEL_FILE = os.path.join(ROOT_DIR, 'models', FLAGS.model + '.py')
@@ -79,6 +81,13 @@ TRAIN_DATASET = part_dataset_all_normal.PartNormalDataset(
     root=DATA_PATH, npoints=NUM_POINT, classification=False, split='trainval')
 TEST_DATASET = part_dataset_all_normal.PartNormalDataset(
     root=DATA_PATH, npoints=NUM_POINT, classification=False, split='test')
+
+if USE_JAKARTO_DATASET:
+    import part_dataset_all_normal_jakarto
+    DATA_PATH = os.path.join(
+        ROOT_DIR, 'data', 'jakarto', 'puisard')
+    TRAIN_DATASET = part_dataset_all_normal_jakarto.PartNormalJakartoDataset(root=DATA_PATH, selector='train.txt', npoints=NUM_POINT)
+    TEST_DATASET = part_dataset_all_normal_jakarto.PartNormalJakartoDataset(root=DATA_PATH, selector='test.txt', npoints=NUM_POINT)
 
 
 def log_string(out_str):
