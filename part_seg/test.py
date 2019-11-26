@@ -24,6 +24,7 @@ parser.add_argument('--num_point', type=int, default=2048, help='Point Number [d
 parser.add_argument('--category', default='Airplane', help='Which single class to train on [default: Airplane]')
 parser.add_argument('--model', default='pointnet2_part_seg', help='Model name [default: pointnet2_part_seg]')
 parser.add_argument('--model_path', default='log/model.ckpt', help='model checkpoint file path [default: log/model.ckpt]')
+parser.add_argument('--jakarto', action='store_true', help='If set, use jakarto dataset instead of shapenet')
 FLAGS = parser.parse_args()
 
 
@@ -34,6 +35,14 @@ MODEL = importlib.import_module(FLAGS.model) # import network module
 NUM_CLASSES = 50
 DATA_PATH = os.path.join(ROOT_DIR, 'data', 'shapenetcore_partanno_segmentation_benchmark_v0_normal')
 TEST_DATASET = part_dataset_all_normal.PartNormalDataset(root=DATA_PATH, npoints=NUM_POINT, classification=False, split='test')
+USE_JAKARTO_DATASET = FLAGS.jakarto
+
+if USE_JAKARTO_DATASET:
+    import part_dataset_all_normal_jakarto
+    DATA_PATH = os.path.join(
+        ROOT_DIR, 'data', 'jakarto', 'puisard')
+    TEST_DATASET = part_dataset_all_normal_jakarto.PartNormalJakartoDataset(root=DATA_PATH, classification=False, selector='test.txt', npoints=NUM_POINT)
+
 
 def get_model(batch_size, num_point):
     with tf.Graph().as_default():
