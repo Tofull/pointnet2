@@ -14,7 +14,14 @@ def pc_normalize(pc):
     pc = pc - centroid
     m = np.max(np.sqrt(np.sum(pc**2, axis=1)))
     pc = pc / m
-    return pc
+    return pc, centroid, m
+
+
+def retrieve_original_pointcloud(pointcloud, centroid, m):
+    original_pointcloud = np.copy(pointcloud)
+    original_pointcloud = original_pointcloud * m
+    original_pointcloud = original_pointcloud + centroid
+    return original_pointcloud
 
 
 class PartNormalDataset():
@@ -86,7 +93,7 @@ class PartNormalDataset():
 
     def __getitem__(self, index):
         if index in self.cache:
-            point_set, normal, seg, cls = self.cache[index]
+            point_set, normal, seg, cls, centroid, m = self.cache[index]
         else:
             fn = self.datapath[index]
             cat = self.datapath[index][0]
@@ -95,11 +102,11 @@ class PartNormalDataset():
             data = np.loadtxt(fn[1]).astype(np.float32)
             point_set = data[:, 0:3]
             if self.normalize:
-                point_set = pc_normalize(point_set)
+                point_set, centroid, m = pc_normalize(point_set)
             normal = data[:, 3:6]
             seg = data[:, -1].astype(np.int32)
             if len(self.cache) < self.cache_size:
-                self.cache[index] = (point_set, normal, seg, cls)
+                self.cache[index] = (point_set, normal, seg, cls, centroid, m)
 
         choice = np.random.choice(len(seg), self.npoints, replace=True)
         # resample
@@ -107,12 +114,12 @@ class PartNormalDataset():
         seg = seg[choice]
         normal = normal[choice, :]
         if self.classification:
-            return point_set, normal, cls
+            return point_set, normal, cls, centroid, m
         else:
             if self.return_cls_label:
-                return point_set, normal, seg, cls
+                return point_set, normal, seg, cls, centroid, m
             else:
-                return point_set, normal, seg
+                return point_set, normal, seg, centroid, m
 
     def __len__(self):
         return len(self.datapath)
@@ -123,7 +130,7 @@ if __name__ == '__main__':
     print(len(d))
 
     i = 500
-    ps, normal, seg = d[i]
+    ps, normal, seg, centroid, m = d[i]
     print(d.datapath[i])
     print(np.max(seg), np.min(seg))
     print(ps.shape, seg.shape, normal.shape)
@@ -136,5 +143,5 @@ if __name__ == '__main__':
 
     d = PartNormalDataset(root='../data/shapenetcore_partanno_segmentation_benchmark_v0_normal', classification=True)
     print(len(d))
-    ps, normal, cls = d[0]
+    ps, normal, cls, centroid, m = d[0]
     print(ps.shape, type(ps), cls.shape, type(cls))

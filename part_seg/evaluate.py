@@ -87,7 +87,7 @@ def get_batch(dataset, idxs, start_idx, end_idx):
     batch_data = np.zeros((bsize, NUM_POINT, 6))
     batch_label = np.zeros((bsize, NUM_POINT), dtype=np.int32)
     for i in range(bsize):
-        ps,normal,seg = dataset[idxs[i+start_idx]]
+        ps,normal,seg, _, _ = dataset[idxs[i+start_idx]]
         batch_data[i,:,0:3] = ps
         batch_data[i,:,3:6] = normal
         batch_label[i,:] = seg
